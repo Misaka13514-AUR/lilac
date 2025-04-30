@@ -686,7 +686,7 @@ def main_may_raise(
   git_pull_override()
   failed = REPO.load_managed_lilac_and_report()
 
-  depman = DependencyManager(REPO.repodir)
+  depman = DependencyManager(REPO.repodir, REPO.depsdir)
   DEPMAP, BUILD_DEPMAP = get_dependency_map(depman, REPO.lilacinfos)
 
   failed_info = D.get('failed', {})
