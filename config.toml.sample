@@ -13,6 +13,8 @@ repodir = "/path/to/gitrepo"
 # The path where built packages and signatures are copied to
 # comment out if there's no need to copy built packages
 destdir = "/path/to/pkgdir"
+# The path where lilac search dependency packages besides repodir
+depsdir = "/path/to/pkgdir"
 
 [lilac]
 # this is the name in the mail header and subject
