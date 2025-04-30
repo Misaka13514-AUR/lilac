@@ -44,6 +44,7 @@ class Repo:
     self.commit_msg_prefix = config['lilac'].get('commit_msg_prefix', '')
 
     self.repodir = Path(config['repository']['repodir']).expanduser()
+    self.depsdir = Path(config['repository'].get('depsdir', '')).expanduser()
     self.bindmounts = config.get('bindmounts', [])
     self.tmpfs = config.get('misc', {}).get('tmpfs', [])
 
