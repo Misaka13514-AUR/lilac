@@ -45,6 +45,7 @@ class Repo:
     self.user_agent = config['lilac'].get('user_agent')
 
     self.repodir = Path(config['repository']['repodir']).expanduser()
+    self.depsdir = Path(config['repository'].get('depsdir', '')).expanduser()
     self.bindmounts = config.get('bindmounts', [])
     self.tmpfs = config.get('misc', {}).get('tmpfs', [])
 

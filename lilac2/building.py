@@ -147,7 +147,10 @@ def resolve_depends(repo: Optional[Repo], depends: Iterable[Dependency]) -> list
         continue
       need_build_first.add(x.pkgname)
     else:
-      depend_packages.append(f'../{p.relative_to(cwd)}')
+      try:
+        depend_packages.append(f'../{p.relative_to(cwd)}')
+      except ValueError:
+        depend_packages.append(str(p))
 
   if need_build_first:
     raise MissingDependencies(need_build_first)

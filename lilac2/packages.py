@@ -82,11 +82,12 @@ def get_dependency_map(
   return map, build_dep_map
 
 _DependencyTuple = namedtuple(
-  '_DependencyTuple', 'pkgdir pkgname')
+  '_DependencyTuple', 'pkgdir pkgname depsdir')
 
 class Dependency(_DependencyTuple):
   pkgdir: Path
   pkgname: str
+  depsdir: Path
 
   def resolve(self) -> Optional[Path]:
     try:
@@ -101,6 +102,19 @@ class Dependency(_DependencyTuple):
       if info.name == self.pkgname:
         pkgs.append(x)
 
+    # also search in DEPSDIR
+    if not pkgs:
+      try:
+        depsdir_files = [x for x in self.depsdir.iterdir()
+                       if x.name.endswith(('.pkg.tar.xz', '.pkg.tar.zst'))]
+      except FileNotFoundError:
+        return None
+
+      for x in depsdir_files:
+        info = archpkg.PkgNameInfo.parseFilename(x.name)
+        if info.name == self.pkgname:
+          pkgs.append(x)
+
     if len(pkgs) == 1:
       return pkgs[0]
     elif not pkgs:
@@ -112,8 +126,9 @@ class Dependency(_DependencyTuple):
 class DependencyManager:
   _CACHE: Dict[str, Dependency] = {}
 
-  def __init__(self, repodir: Path) -> None:
+  def __init__(self, repodir: Path, depsdir: Path = Path('')) -> None:
     self.repodir = repodir
+    self.depsdir = depsdir
 
   def get(self, what: Union[str, Tuple[str, str]]) -> Dependency:
     if isinstance(what, tuple):
@@ -124,7 +139,7 @@ class DependencyManager:
     key = '/'.join((pkgbase, pkgname))
     if key not in self._CACHE:
       self._CACHE[key] = Dependency(
-        self.repodir / pkgbase, pkgname)
+        self.repodir / pkgbase, pkgname, self.depsdir)
     return self._CACHE[key]
 
 def get_changed_packages(from_: str, to: str) -> Set[str]:
