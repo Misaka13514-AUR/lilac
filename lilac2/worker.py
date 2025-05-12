@@ -53,7 +53,7 @@ def may_update_pkgrel() -> Generator[None, None, None]:
   if pkgver == pkgver2 and \
      pyalpm.vercmp(f'1-{pkgrel}', f'1-{pkgrel2}') >= 0:
     try:
-      update_pkgrel(_next_pkgrel(pkgrel))
+      update_pkgrel(pkgrel)
     except ValueError:
       # pkgrel is not a number, resetting to 1
       update_pkgrel(1)
