@@ -239,7 +239,7 @@ def update_pkgver_and_pkgrel(
       if pkgver != newver:
         line = 'pkgrel=1'
       else:
-        line = f'pkgrel={_next_pkgrel(pkgrel)}'
+        line = f'pkgrel={pkgrel}'
 
     print(line)
 
@@ -555,14 +555,14 @@ def aur_pre_build(
   except Exception:
     raise AurDownloadError(name)
 
-  aur_pkgver, aur_pkgrel = get_pkgver_and_pkgrel()
-  if pkgver and pkgver == aur_pkgver:
-    if pyalpm.vercmp(f'1-{pkgrel}', f'1-{aur_pkgrel}') < 0:
-      # use aur pkgrel
-      pass
-    else:
-      # bump
-      update_pkgrel()
+  # aur_pkgver, aur_pkgrel = get_pkgver_and_pkgrel()
+  # if pkgver and pkgver == aur_pkgver:
+  #   if pyalpm.vercmp(f'1-{pkgrel}', f'1-{aur_pkgrel}') < 0:
+  #     # use aur pkgrel
+  #     pass
+  #   else:
+  #     # bump
+  #     update_pkgrel()
 
   if do_vcs_update is None:
     do_vcs_update = name.endswith(VCS_SUFFIXES)
@@ -570,14 +570,14 @@ def aur_pre_build(
   if do_vcs_update:
     vcs_update()
     # recheck after sync, because AUR pkgver may lag behind
-    new_pkgver, new_pkgrel = get_pkgver_and_pkgrel()
-    if pkgver and pkgver == new_pkgver:
-      if pkgrel is None:
-        next_pkgrel = 1
-      else:
-        next_pkgrel = _next_pkgrel(pkgrel)
-      if pyalpm.vercmp(f'1-{next_pkgrel}', f'1-{new_pkgrel}') > 0:
-        update_pkgrel(next_pkgrel)
+    # new_pkgver, new_pkgrel = get_pkgver_and_pkgrel()
+    # if pkgver and pkgver == new_pkgver:
+    #   if pkgrel is None:
+    #     next_pkgrel = 1
+    #   else:
+    #     next_pkgrel = _next_pkgrel(pkgrel)
+    #   if pyalpm.vercmp(f'1-{next_pkgrel}', f'1-{new_pkgrel}') > 0:
+    #     update_pkgrel(next_pkgrel)
 
 def aur_post_build() -> None:
   git_rm_files(_g.aur_pre_files)
