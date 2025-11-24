@@ -13,6 +13,7 @@ from pathlib import Path
 from types import SimpleNamespace
 import tarfile
 import io
+import time
 from contextlib import suppress
 from collections.abc import Container
 from urllib.parse import quote
@@ -473,7 +474,9 @@ def _try_aur_url(name: str) -> bytes:
   templates = [aur4url]
   urls = [url.format(first_two=name[:2], name=name) for url in templates]
   for url in urls:
-    for _ in range(2):
+    for i in range(5):
+      if i > 0:
+        time.sleep(2 ** i)
       try:
         response = s.get(url)
       except httpx.ReadTimeout:
