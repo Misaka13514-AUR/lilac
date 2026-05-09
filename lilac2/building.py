@@ -147,7 +147,9 @@ def resolve_depends(repo: Optional[Repo], depends: Iterable[Dependency]) -> list
         continue
       need_build_first.add(x.pkgname)
     else:
-      depend_packages.append(f'../{p.relative_to(cwd)}')
+      # cwd is a physical path, resolve symlinks to prevent relative_to() error
+      p_real = p.resolve()
+      depend_packages.append(f'../{p_real.relative_to(cwd)}')
 
   if need_build_first:
     raise MissingDependencies(need_build_first)
