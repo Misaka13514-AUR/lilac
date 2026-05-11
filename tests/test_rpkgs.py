@@ -67,7 +67,7 @@ async def test_bioc_data_experiment(get_version):
     'source': 'rpkgs',
     'pkgname': 'ALL',
     'repo': 'bioc-data-experiment',
-  }) == '1.53.0'
+  }) == '1.54.0'
 
 async def test_bioc_workflows(get_version):
   ver = await get_version('liftOver', {
