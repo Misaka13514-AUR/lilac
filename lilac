@@ -213,6 +213,7 @@ class BuildSorter:
   ) -> None:
     sorter.prepare()
     self.sorter = sorter
+    self.depmap = depmap
     self.ready: list[str] = []
 
     revdepmap = defaultdict(set)
@@ -271,6 +272,7 @@ def start_build(
           running = frozenset(x.pkgbase for x in futures.values()),
           starving = not bool(futures),
           workermans = workermans,
+          built = built,
         )
         for pkg in pkgs:
           if pkg.pkgbase not in nvdata:
@@ -310,6 +312,7 @@ def try_pick_some(
   running: Set[str],
   starving: bool,
   workermans: list[WorkerManager],
+  built: set[str],
 ) -> tuple[list[PkgToBuild], bool]:
   overloaded = False
 
@@ -321,6 +324,22 @@ def try_pick_some(
     return [], overloaded
 
   ready_to_build = [pkg for pkg in ready if pkg not in running]
+
+  max_builds = config['lilac'].get('max_builds')
+  if max_builds is not None and len(built) + len(running) >= max_builds:
+    allowed = []
+    for pkg in ready_to_build:
+      deps = buildsorter.depmap.get(pkg, set())
+      info = repo.lilacinfos.get(pkg)
+      if info and info.update_on_build:
+        deps = deps.union(x.pkgbase for x in info.update_on_build)
+
+      if deps & (built | set(failed)):
+        allowed.append(pkg)
+      else:
+        logger.info('Skipping %s due to max_builds limit', pkg)
+    ready_to_build = allowed
+
   if not ready_to_build:
     return [], overloaded
 
@@ -710,8 +729,10 @@ def main_may_raise(
   # failed ones
   need_rebuild_failed = failed_prev & changed
   # if pkgrel is updated, build a new release
+  skipped_pkgrels = D.get('skipped_pkgrels', set())
   need_rebuild_pkgrel = {x for x in changed
                         if pkgrel_changed(last_commit, 'HEAD', x)}
+  need_rebuild_pkgrel.update(skipped_pkgrels & U)
 
   # packages we care about
   care_pkgs: set[str] = set()
@@ -837,6 +858,13 @@ def main_may_raise(
       if x not in REPO.lilacinfos:
         del failed_info[x]
     D['failed'] = failed_info
+
+    new_skipped_pkgrels = set()
+    for p, rs in build_reasons.items():
+      if p not in update_succeeded and p not in failed:
+        if any(isinstance(r, BuildReason.UpdatedPkgrel) for r in rs):
+          new_skipped_pkgrels.add(p)
+    D['skipped_pkgrels'] = new_skipped_pkgrels
 
     if config['lilac']['rebuild_failed_pkgs']:
       if update_succeeded:
